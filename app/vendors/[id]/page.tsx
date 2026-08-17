@@ -28,7 +28,7 @@ export default async function VendorProfilePage({
   const vendor = await api.getVendor(id).catch(() => null);
   if (!vendor) notFound();
 
-  const products = await api.getCatalog({ vendorId: vendor.id });
+  const products = await api.getCatalog({ vendorId: vendor.id }).catch(() => []);
 
   return (
     <div>

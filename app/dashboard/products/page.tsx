@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { DeleteProductButton } from "@/components/delete-product-button";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
 import { discountPercent, formatPrice } from "@/lib/format";
 
@@ -13,7 +14,14 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardProductsPage() {
-  const products = await api.getCatalog();
+  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let serverError = false;
+
+  try {
+    products = await api.getCatalog();
+  } catch {
+    serverError = true;
+  }
 
   return (
     <div>
@@ -34,7 +42,9 @@ export default async function DashboardProductsPage() {
         </Link>
       </div>
 
-      {products.length === 0 ? (
+      {serverError && <ErrorBanner />}
+
+      {products.length === 0 && !serverError ? (
         <div className="mt-6">
           <EmptyState
             title="No products yet"

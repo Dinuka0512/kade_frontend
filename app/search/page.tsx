@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorBanner } from "@/components/error-banner";
 import { ProductCard } from "@/components/product-card";
 import { VendorCard } from "@/components/vendor-card";
 import { api } from "@/lib/api";
@@ -37,10 +38,18 @@ export default async function SearchPage({
     );
   }
 
-  const [products, vendors] = await Promise.all([
-    api.getCatalog({ q }),
-    api.getVendors(),
-  ]);
+  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
+  let serverError = false;
+
+  try {
+    [products, vendors] = await Promise.all([
+      api.getCatalog({ q }),
+      api.getVendors(),
+    ]);
+  } catch {
+    serverError = true;
+  }
 
   const vendorMatches = vendors.filter(
     (v) =>
@@ -58,14 +67,16 @@ export default async function SearchPage({
         Search
       </h1>
       <p className="mt-1 text-sm text-ink-soft">
-        {total} result{total === 1 ? "" : "s"} for “{raw}”
+        {total} result{total === 1 ? "" : "s"} for &ldquo;{raw}&rdquo;
       </p>
 
-      {total === 0 ? (
+      {serverError && <ErrorBanner />}
+
+      {total === 0 && !serverError ? (
         <div className="mt-8">
           <EmptyState
             title="No results"
-            description={`Nothing matched “${raw}”. Try a different search term.`}
+            description={`Nothing matched "${raw}". Try a different search term.`}
           />
         </div>
       ) : (

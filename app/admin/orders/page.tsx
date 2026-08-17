@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ErrorBanner } from "@/components/error-banner";
 import { OrderStatusControl } from "@/components/order-status-control";
 import { StatusBadge } from "@/components/status-badge";
 import { api } from "@/lib/api";
@@ -11,7 +12,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminOrdersPage() {
-  const orders = await api.getOrders();
+  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
+  let serverError = false;
+
+  try {
+    orders = await api.getOrders();
+  } catch {
+    serverError = true;
+  }
 
   return (
     <div>
@@ -19,6 +27,8 @@ export default async function AdminOrdersPage() {
       <p className="mt-1 text-sm text-ink-soft">
         All orders placed across the platform
       </p>
+
+      {serverError && <ErrorBanner />}
 
       <div className="mt-6 flex flex-col gap-4">
         {orders.map((order) => (
@@ -59,6 +69,9 @@ export default async function AdminOrdersPage() {
             </div>
           </div>
         ))}
+        {orders.length === 0 && !serverError && (
+          <p className="py-8 text-center text-sm text-ink-muted">No orders yet</p>
+        )}
       </div>
     </div>
   );

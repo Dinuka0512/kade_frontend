@@ -159,7 +159,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-black-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800"
+                className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
               >
                 Create account
               </Link>
@@ -271,7 +271,7 @@ export function Navbar() {
                 <Link
                   href="/register"
                   onClick={() => setOpen(false)}
-                  className="rounded-md bg-black-950 px-3 py-2.5 text-sm font-semibold text-white"
+                  className="rounded-md bg-brand-600 px-3 py-2.5 text-sm font-semibold text-white"
                 >
                   Create account
                 </Link>

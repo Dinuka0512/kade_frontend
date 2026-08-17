@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { VendorStatusToggle } from "@/components/vendor-status-toggle";
+import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminVendorsPage() {
-  const vendors = await api.getVendors();
+  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
+  let serverError = false;
+
+  try {
+    vendors = await api.getVendors();
+  } catch {
+    serverError = true;
+  }
 
   return (
     <div>
@@ -18,6 +26,8 @@ export default async function AdminVendorsPage() {
       <p className="mt-1 text-sm text-ink-soft">
         {vendors.length} registered · {vendors.filter((v) => v.status === "active").length} active
       </p>
+
+      {serverError && <ErrorBanner />}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="overflow-x-auto">

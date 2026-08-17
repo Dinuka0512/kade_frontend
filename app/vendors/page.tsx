@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ErrorBanner } from "@/components/error-banner";
 import { VendorCard } from "@/components/vendor-card";
 import { api } from "@/lib/api";
 
@@ -11,7 +12,14 @@ export const metadata: Metadata = {
 };
 
 export default async function VendorsPage() {
-  const vendors = await api.getVendors();
+  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
+  let serverError = false;
+
+  try {
+    vendors = await api.getVendors();
+  } catch {
+    serverError = true;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -23,6 +31,8 @@ export default async function VendorsPage() {
           {vendors.length} local businesses selling on Kade
         </p>
       </div>
+
+      {serverError && <ErrorBanner />}
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {vendors.map((vendor) => (
@@ -40,7 +50,7 @@ export default async function VendorsPage() {
         </p>
         <Link
           href="/register"
-          className="mt-4 inline-block rounded-md bg-black-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          className="mt-4 inline-block rounded-md bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           Become a vendor
         </Link>

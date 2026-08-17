@@ -2,10 +2,10 @@ import Link from "next/link";
 
 const shopLinks = [
   { href: "/products", label: "All products" },
-  { href: "/products?category=cat-electronics", label: "Electronics" },
-  { href: "/products?category=cat-fashion", label: "Fashion" },
-  { href: "/products?category=cat-home", label: "Home & Living" },
-  { href: "/products?category=cat-groceries", label: "Groceries" },
+  { href: "/products?category=1", label: "Electronics" },
+  { href: "/products?category=2", label: "Fashion" },
+  { href: "/products?category=3", label: "Home & Living" },
+  { href: "/products?category=4", label: "Groceries" },
 ];
 
 export function Footer() {

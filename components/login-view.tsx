@@ -96,11 +96,6 @@ function LoginForm() {
             Create an account
           </Link>
         </p>
-        <p className="mt-4 rounded-xl bg-surface-2 px-4 py-3 text-center text-xs text-ink-soft">
-          Demo mode: any valid email + password (min 6 chars) signs you in. Use
-          an email containing <span className="font-semibold">vendor</span> to
-          get the vendor dashboard.
-        </p>
       </div>
     </div>
   );

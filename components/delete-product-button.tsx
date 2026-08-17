@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 export function DeleteProductButton({ productId }: { productId: string }) {
@@ -13,7 +14,10 @@ export function DeleteProductButton({ productId }: { productId: string }) {
     setBusy(true);
     try {
       await api.deleteProduct(productId);
+      toast.success("Product deleted");
       router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete product");
     } finally {
       setBusy(false);
     }

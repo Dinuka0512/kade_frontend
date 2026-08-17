@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -8,10 +9,18 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCategoriesPage() {
-  const [categories, products] = await Promise.all([
-    api.getCategories(),
-    api.getCatalog(),
-  ]);
+  let categories: Awaited<ReturnType<typeof api.getCategories>> = [];
+  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let serverError = false;
+
+  try {
+    [categories, products] = await Promise.all([
+      api.getCategories(),
+      api.getCatalog(),
+    ]);
+  } catch {
+    serverError = true;
+  }
 
   const counts = products.reduce<Record<string, number>>((acc, p) => {
     acc[p.categoryId] = (acc[p.categoryId] ?? 0) + 1;
@@ -31,6 +40,8 @@ export default async function AdminCategoriesPage() {
       <p className="mt-1 text-sm text-ink-soft">
         {categories.length} categories powering the catalog
       </p>
+
+      {serverError && <ErrorBanner />}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="overflow-x-auto">

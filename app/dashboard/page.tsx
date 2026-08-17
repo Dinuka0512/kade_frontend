@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
+import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
 import { formatCompact, formatDateTime, formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardOverviewPage() {
-  const [stats, orders] = await Promise.all([api.getDashboardStats(), api.getOrders()]);
+  let stats: Awaited<ReturnType<typeof api.getDashboardStats>> = { revenue: 0, orders: 0, pendingOrders: 0, products: 0, customers: 0, avgOrderValue: 0 };
+  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
+  let serverError = false;
+
+  try {
+    [stats, orders] = await Promise.all([api.getDashboardStats(), api.getOrders()]);
+  } catch {
+    serverError = true;
+  }
+
   const recent = orders.slice(0, 5);
 
   return (
@@ -28,6 +38,8 @@ export default async function DashboardOverviewPage() {
           + New product
         </Link>
       </div>
+
+      {serverError && <ErrorBanner />}
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
@@ -99,6 +111,13 @@ export default async function DashboardOverviewPage() {
                   </td>
                 </tr>
               ))}
+              {recent.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-ink-muted">
+                    No orders yet
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

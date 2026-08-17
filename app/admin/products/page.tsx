@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { DeleteProductButton } from "@/components/delete-product-button";
+import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
 import { formatPrice } from "@/lib/format";
 
@@ -12,7 +13,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminProductsPage() {
-  const products = await api.getCatalog();
+  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let serverError = false;
+
+  try {
+    products = await api.getCatalog();
+  } catch {
+    serverError = true;
+  }
 
   return (
     <div>
@@ -20,6 +28,8 @@ export default async function AdminProductsPage() {
       <p className="mt-1 text-sm text-ink-soft">
         {products.length} listings across all vendors
       </p>
+
+      {serverError && <ErrorBanner />}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="divide-y divide-line-soft">
@@ -56,6 +66,9 @@ export default async function AdminProductsPage() {
               </div>
             </div>
           ))}
+          {products.length === 0 && !serverError && (
+            <p className="py-8 text-center text-sm text-ink-muted">No products yet</p>
+          )}
         </div>
       </div>
     </div>

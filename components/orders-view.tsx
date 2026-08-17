@@ -26,6 +26,7 @@ export function OrdersView() {
     api
       .getOrders()
       .then(setOrders)
+      .catch(() => {})
       .finally(() => setLoadingOrders(false));
   }, [user, loading, router]);
 

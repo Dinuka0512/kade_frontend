@@ -1,22 +1,38 @@
 import Link from "next/link";
 import { Hero } from "@/components/hero";
+import { ErrorBanner } from "@/components/error-banner";
 import { ProductCard } from "@/components/product-card";
 import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [featured, rest, vendors] = await Promise.all([
-    api.getCatalog({ featured: true }),
-    api.getCatalog({ sort: "newest" }),
-    api.getVendors(),
-  ]);
+  let featured: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let rest: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
+  let serverError = false;
+
+  try {
+    [featured, rest, vendors] = await Promise.all([
+      api.getCatalog({ featured: true }),
+      api.getCatalog({ sort: "newest" }),
+      api.getVendors(),
+    ]);
+  } catch {
+    serverError = true;
+  }
 
   const newArrivals = rest.filter((p) => !p.isFeatured).slice(0, 8);
 
   return (
     <>
       <Hero />
+
+      {serverError && (
+        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+          <ErrorBanner />
+        </div>
+      )}
 
       {featured.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -78,9 +94,11 @@ export default async function HomePage() {
                 Sell on Kade
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                {vendors.length} trusted vendors already call Kade home. Set up
-                your storefront, manage products and track orders — all from
-                one dashboard.
+                {vendors.length > 0
+                  ? `${vendors.length} trusted vendors already call Kade home.`
+                  : "Join the island's local marketplace."}{" "}
+                Set up your storefront, manage products and track orders — all
+                from one dashboard.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { Order, OrderStatus } from "@/lib/types";
 
@@ -22,7 +23,10 @@ export function OrderStatusControl({ order }: { order: Order }) {
     setBusy(true);
     try {
       await api.updateOrderStatus(order.id, status);
+      toast.success(`Order status updated to ${status}`);
       router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update order status");
     } finally {
       setBusy(false);
     }

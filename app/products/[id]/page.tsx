@@ -29,7 +29,7 @@ export default async function ProductDetailPage({
   const product = await api.getProduct(id).catch(() => null);
   if (!product) notFound();
 
-  const related = (await api.getCatalog({ category: product.categoryId }))
+  const related = (await api.getCatalog({ category: product.categoryId }).catch(() => []))
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 

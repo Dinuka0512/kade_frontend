@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
@@ -50,6 +51,7 @@ function CheckoutForm({
         items: lines.map((l) => ({ productId: l.product.id, qty: l.qty })),
       });
       clear();
+      toast.success("Order placed successfully!");
       router.push(`/orders/${order.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -197,9 +199,7 @@ function CheckoutForm({
         >
           {submitting ? "Placing order…" : `Place order · ${formatPrice(total)}`}
         </button>
-        <p className="mt-3 text-center text-xs text-ink-muted">
-          Demo checkout — no payment is processed.
-        </p>
+
       </aside>
     </form>
   );

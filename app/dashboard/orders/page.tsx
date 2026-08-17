@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorBanner } from "@/components/error-banner";
 import { OrderStatusControl } from "@/components/order-status-control";
 import { StatusBadge } from "@/components/status-badge";
 import { api } from "@/lib/api";
@@ -12,7 +13,14 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardOrdersPage() {
-  const orders = await api.getOrders();
+  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
+  let serverError = false;
+
+  try {
+    orders = await api.getOrders();
+  } catch {
+    serverError = true;
+  }
 
   return (
     <div>
@@ -21,7 +29,9 @@ export default async function DashboardOrdersPage() {
         {orders.length} order{orders.length === 1 ? "" : "s"} on your storefront
       </p>
 
-      {orders.length === 0 ? (
+      {serverError && <ErrorBanner />}
+
+      {orders.length === 0 && !serverError ? (
         <div className="mt-6">
           <EmptyState
             title="No orders yet"

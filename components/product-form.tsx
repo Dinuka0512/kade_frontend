@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { Category, Product } from "@/lib/types";
 
@@ -76,8 +77,10 @@ export function ProductForm({ product }: { product?: Product }) {
     try {
       if (product) {
         await api.updateProduct(product.id, input);
+        toast.success("Product updated");
       } else {
         await api.createProduct(input);
+        toast.success("Product created");
       }
       router.push("/dashboard/products");
       router.refresh();

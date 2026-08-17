@@ -17,6 +17,7 @@ export function useCartLines() {
       .then((list) => {
         if (mounted) setProducts(list);
       })
+      .catch(() => {})
       .finally(() => {
         if (mounted) setLoading(false);
       });

@@ -1,18 +1,30 @@
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
+import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  const [stats, orders, vendors, products] = await Promise.all([
-    api.getDashboardStats(),
-    api.getOrders(),
-    api.getVendors(),
-    api.getCatalog(),
-  ]);
+  let stats: Awaited<ReturnType<typeof api.getDashboardStats>> = { revenue: 0, orders: 0, pendingOrders: 0, products: 0, customers: 0, avgOrderValue: 0 };
+  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
+  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
+  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
+  let serverError = false;
+
+  try {
+    [stats, orders, vendors, products] = await Promise.all([
+      api.getDashboardStats(),
+      api.getOrders(),
+      api.getVendors(),
+      api.getCatalog(),
+    ]);
+  } catch {
+    serverError = true;
+  }
+
   const recent = orders.slice(0, 6);
 
   return (
@@ -23,6 +35,8 @@ export default async function AdminOverviewPage() {
       <p className="mt-1 text-sm text-ink-soft">
         A snapshot of the whole Kade marketplace.
       </p>
+
+      {serverError && <ErrorBanner />}
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
@@ -80,6 +94,9 @@ export default async function AdminOverviewPage() {
                 </div>
               </div>
             ))}
+            {recent.length === 0 && (
+              <p className="py-4 text-center text-sm text-ink-muted">No orders yet</p>
+            )}
           </div>
         </section>
 
@@ -118,6 +135,9 @@ export default async function AdminOverviewPage() {
                 </span>
               </div>
             ))}
+            {vendors.length === 0 && (
+              <p className="py-4 text-center text-sm text-ink-muted">No vendors yet</p>
+            )}
           </div>
         </section>
       </div>
