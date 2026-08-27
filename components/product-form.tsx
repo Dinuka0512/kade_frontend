@@ -18,7 +18,6 @@ type FormState = {
   shortDescription: string;
   longDescription: string;
   tags: string;
-  images: string;
 };
 
 export function ProductForm({ product }: { product?: Product }) {
@@ -26,6 +25,8 @@ export function ProductForm({ product }: { product?: Product }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const [form, setForm] = useState<FormState>({
     name: product?.name ?? "",
@@ -36,7 +37,6 @@ export function ProductForm({ product }: { product?: Product }) {
     shortDescription: product?.shortDescription ?? "",
     longDescription: product?.longDescription ?? "",
     tags: product?.tags.join(", ") ?? "",
-    images: product?.images.join(", ") ?? "",
   });
 
   useEffect(() => {
@@ -45,6 +45,27 @@ export function ProductForm({ product }: { product?: Product }) {
 
   const set = (key: keyof FormState) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    setImageFiles((prev) => [...prev, ...newFiles]);
+
+    newFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,20 +87,16 @@ export function ProductForm({ product }: { product?: Product }) {
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
-      images: form.images
-        .split(",")
-        .map((u) => u.trim())
-        .filter(Boolean),
     };
 
     setSubmitting(true);
     setError(null);
     try {
       if (product) {
-        await api.updateProduct(product.id, input);
+        await api.updateProduct(product.id, input, imageFiles.length > 0 ? imageFiles : undefined);
         toast.success("Product updated");
       } else {
-        await api.createProduct(input);
+        await api.createProduct(input, imageFiles.length > 0 ? imageFiles : undefined);
         toast.success("Product created");
       }
       router.push("/dashboard/products");
@@ -210,17 +227,53 @@ export function ProductForm({ product }: { product?: Product }) {
 
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-soft">
-              Image URLs (comma separated)
+              Product Images
             </span>
-            <textarea
-              rows={3}
-              value={form.images}
-              onChange={(e) => set("images")(e.target.value)}
-              placeholder="https://…/1.jpg, https://…/2.jpg"
-              className={inputClass}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 file:mr-4 file:rounded-lg file:border-0 file:bg-black-950 file:px-4 file:py-2 file:text-sm file:text-white hover:file:bg-black-950/90"
             />
+            {product?.images && product.images.length > 0 && imageFiles.length === 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {product.images.map((url, i) => (
+                  <div key={i} className="relative">
+                    <img
+                      src={url}
+                      alt={`Existing ${i + 1}`}
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black-950 text-xs text-white">
+                      Existing
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {imagePreviews.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {imagePreviews.map((preview, i) => (
+                  <div key={i} className="relative">
+                    <img
+                      src={preview}
+                      alt={`Preview ${i + 1}`}
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs text-white hover:bg-rose-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <span className="mt-1.5 block text-xs text-ink-muted">
-              Use picsum.photos/seed/your-slug/800/800 for placeholder images.
+              Upload product images (JPG, PNG, WebP). Max 10MB per file.
             </span>
           </label>
         </div>

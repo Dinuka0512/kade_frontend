@@ -14,7 +14,13 @@ const statuses: OrderStatus[] = [
   "cancelled",
 ];
 
-export function OrderStatusControl({ order }: { order: Order }) {
+export function OrderStatusControl({
+  order,
+  onChanged,
+}: {
+  order: Order;
+  onChanged?: () => void;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -25,6 +31,7 @@ export function OrderStatusControl({ order }: { order: Order }) {
       await api.updateOrderStatus(order.id, status);
       toast.success(`Order status updated to ${status}`);
       router.refresh();
+      onChanged?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update order status");
     } finally {

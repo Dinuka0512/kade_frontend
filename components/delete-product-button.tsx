@@ -5,7 +5,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
-export function DeleteProductButton({ productId }: { productId: string }) {
+export function DeleteProductButton({
+  productId,
+  onChanged,
+}: {
+  productId: string;
+  onChanged?: () => void;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -16,6 +22,7 @@ export function DeleteProductButton({ productId }: { productId: string }) {
       await api.deleteProduct(productId);
       toast.success("Product deleted");
       router.refresh();
+      onChanged?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete product");
     } finally {

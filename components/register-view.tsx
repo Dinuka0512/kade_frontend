@@ -26,7 +26,7 @@ export function RegisterView() {
     setError(null);
     try {
       const user = await register(name, email, password, role);
-      router.push(user.role === "vendor" ? "/dashboard" : "/");
+      router.push(user.role === "vendor" ? "/dashboard" : user.role === "admin" ? "/admin" : "/");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -59,7 +59,7 @@ export function RegisterView() {
                 onClick={() => setRole(option.value)}
                 className={`rounded-xl border p-3 text-left transition ${
                   role === option.value
-                    ? "border-brand-500 bg-brand-50"
+                    ? "border-brand-500 bg-brand-500/10"
                     : "border-line bg-surface hover:border-line-strong"
                 }`}
               >

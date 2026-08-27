@@ -6,7 +6,13 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { Vendor } from "@/lib/types";
 
-export function VendorStatusToggle({ vendor }: { vendor: Vendor }) {
+export function VendorStatusToggle({
+  vendor,
+  onChanged,
+}: {
+  vendor: Vendor;
+  onChanged?: () => void;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -17,6 +23,7 @@ export function VendorStatusToggle({ vendor }: { vendor: Vendor }) {
       await api.setVendorStatus(vendor.id, next);
       toast.success(`Vendor ${next === "active" ? "activated" : "suspended"}`);
       router.refresh();
+      onChanged?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update vendor status");
     } finally {

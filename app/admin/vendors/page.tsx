@@ -1,33 +1,39 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { VendorStatusToggle } from "@/components/vendor-status-toggle";
+import { DeleteVendorButton } from "@/components/delete-vendor-button";
 import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
+import type { Vendor } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Vendors",
-};
-
-export default async function AdminVendorsPage() {
-  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
-  let serverError = false;
-
-  try {
-    vendors = await api.getVendors();
-  } catch {
-    serverError = true;
-  }
+export default function AdminVendorsPage() {
+  const { data: vendors, error, loading, reload } = useAuthedResource<Vendor[]>(
+    () => api.getVendors(),
+    []
+  );
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-ink">Vendors</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        {vendors.length} registered · {vendors.filter((v) => v.status === "active").length} active
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Vendors</h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            {loading
+              ? "Loading vendors…"
+              : `${vendors.length} registered · ${vendors.filter((v) => v.status === "active").length} active`}
+          </p>
+        </div>
+        <Link
+          href="/admin/vendors/new"
+          className="rounded-xl bg-black-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black-950/90"
+        >
+          + New vendor
+        </Link>
+      </div>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="overflow-x-auto">
@@ -71,10 +77,26 @@ export default async function AdminVendorsPage() {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <VendorStatusToggle vendor={vendor} />
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/vendors/${vendor.id}/edit`}
+                        className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition hover:bg-surface-2"
+                      >
+                        Edit
+                      </Link>
+                      <VendorStatusToggle vendor={vendor} onChanged={reload} />
+                      <DeleteVendorButton vendorId={vendor.id} onChanged={reload} />
+                    </div>
                   </td>
                 </tr>
               ))}
+              {vendors.length === 0 && !loading && !error && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-sm text-ink-muted">
+                    No vendors yet
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

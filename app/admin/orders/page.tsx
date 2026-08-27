@@ -1,25 +1,18 @@
-import type { Metadata } from "next";
+"use client";
+
 import { ErrorBanner } from "@/components/error-banner";
 import { OrderStatusControl } from "@/components/order-status-control";
 import { StatusBadge } from "@/components/status-badge";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
 import { formatDateTime, formatPrice } from "@/lib/format";
+import type { Order } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Orders",
-};
-
-export default async function AdminOrdersPage() {
-  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
-  let serverError = false;
-
-  try {
-    orders = await api.getOrders();
-  } catch {
-    serverError = true;
-  }
+export default function AdminOrdersPage() {
+  const { data: orders, error, loading, reload } = useAuthedResource<Order[]>(
+    () => api.getOrders(),
+    []
+  );
 
   return (
     <div>
@@ -28,51 +21,59 @@ export default async function AdminOrdersPage() {
         All orders placed across the platform
       </p>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
-      <div className="mt-6 flex flex-col gap-4">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="rounded-2xl border border-line bg-surface p-5"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-bold text-ink">{order.number}</p>
-                <p className="text-xs text-ink-soft">
-                  {formatDateTime(order.placedAt)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <StatusBadge status={order.status} />
-                <OrderStatusControl order={order} />
-              </div>
-            </div>
-
-            <div className="mt-4 border-t border-line-soft pt-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+      {loading ? (
+        <div className="mt-6 flex flex-col gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-36 animate-pulse rounded-2xl bg-surface-3" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-col gap-4">
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              className="rounded-2xl border border-line bg-surface p-5"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-medium text-ink">
-                    {order.customerName}
-                  </p>
+                  <p className="font-bold text-ink">{order.number}</p>
                   <p className="text-xs text-ink-soft">
-                    {order.email} · {order.address.line1}, {order.address.city}
-                  </p>
-                  <p className="mt-1 text-xs text-ink-soft">
-                    {order.items.map((i) => `${i.name} × ${i.qty}`).join(", ")}
+                    {formatDateTime(order.placedAt)}
                   </p>
                 </div>
-                <span className="text-base font-bold text-ink">
-                  {formatPrice(order.total)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={order.status} />
+                  <OrderStatusControl order={order} onChanged={reload} />
+                </div>
+              </div>
+
+              <div className="mt-4 border-t border-line-soft pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <div>
+                    <p className="font-medium text-ink">
+                      {order.customerName}
+                    </p>
+                    <p className="text-xs text-ink-soft">
+                      {order.email} · {order.address.line1}, {order.address.city}
+                    </p>
+                    <p className="mt-1 text-xs text-ink-soft">
+                      {order.items.map((i) => `${i.name} × ${i.qty}`).join(", ")}
+                    </p>
+                  </div>
+                  <span className="text-base font-bold text-ink">
+                    {formatPrice(order.total)}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-        {orders.length === 0 && !serverError && (
-          <p className="py-8 text-center text-sm text-ink-muted">No orders yet</p>
-        )}
-      </div>
+          ))}
+          {orders.length === 0 && !error && (
+            <p className="py-8 text-center text-sm text-ink-muted">No orders yet</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

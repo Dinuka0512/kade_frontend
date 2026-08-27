@@ -1,37 +1,38 @@
-import type { Metadata } from "next";
+"use client";
+
 import { EmptyState } from "@/components/empty-state";
 import { ErrorBanner } from "@/components/error-banner";
 import { OrderStatusControl } from "@/components/order-status-control";
 import { StatusBadge } from "@/components/status-badge";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
 import { formatDateTime, formatPrice } from "@/lib/format";
+import type { Order } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Orders",
-};
-
-export default async function DashboardOrdersPage() {
-  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
-  let serverError = false;
-
-  try {
-    orders = await api.getOrders();
-  } catch {
-    serverError = true;
-  }
+export default function DashboardOrdersPage() {
+  const { data: orders, error, loading, reload } = useAuthedResource<Order[]>(
+    () => api.getOrders(),
+    []
+  );
 
   return (
     <div>
       <h1 className="text-2xl font-bold tracking-tight text-ink">Orders</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        {orders.length} order{orders.length === 1 ? "" : "s"} on your storefront
+        {loading
+          ? "Loading orders…"
+          : `${orders.length} order${orders.length === 1 ? "" : "s"} on your storefront`}
       </p>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
-      {orders.length === 0 && !serverError ? (
+      {loading ? (
+        <div className="mt-6 flex flex-col gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-36 animate-pulse rounded-2xl bg-surface-3" />
+          ))}
+        </div>
+      ) : orders.length === 0 && !error ? (
         <div className="mt-6">
           <EmptyState
             title="No orders yet"
@@ -54,7 +55,7 @@ export default async function DashboardOrdersPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={order.status} />
-                  <OrderStatusControl order={order} />
+                  <OrderStatusControl order={order} onChanged={reload} />
                 </div>
               </div>
 

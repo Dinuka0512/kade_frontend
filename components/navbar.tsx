@@ -12,6 +12,9 @@ const links = [
   { href: "/vendors", label: "Vendors" },
 ];
 
+const vendorLinks = [{ href: "/dashboard", label: "Dashboard" }];
+const adminLinks = [{ href: "/admin", label: "Admin" }];
+
 export function Navbar() {
   const { user, loading, logout } = useAuth();
   const { count } = useCart();
@@ -19,6 +22,13 @@ export function Navbar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const navLinks =
+    user?.role === "vendor"
+      ? vendorLinks
+      : user?.role === "admin"
+        ? adminLinks
+        : links;
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +80,7 @@ export function Navbar() {
         </form>
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {links.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -86,30 +96,6 @@ export function Navbar() {
               )}
             </Link>
           ))}
-          {user?.role === "vendor" && (
-            <Link
-              href="/dashboard"
-              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                isActive("/dashboard")
-                  ? "text-ink"
-                  : "text-ink-soft hover:text-ink"
-              }`}
-            >
-              Dashboard
-            </Link>
-          )}
-          {user?.role === "admin" && (
-            <Link
-              href="/admin"
-              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                isActive("/admin")
-                  ? "text-ink"
-                  : "text-ink-soft hover:text-ink"
-              }`}
-            >
-              Admin
-            </Link>
-          )}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -207,7 +193,7 @@ export function Navbar() {
                 className="w-full rounded-full border border-line bg-surface-2 py-2 pl-9 pr-4 text-sm text-ink placeholder:text-ink-muted focus:border-ink focus:bg-surface focus:outline-none"
               />
             </form>
-            {links.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -221,24 +207,6 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {user?.role === "vendor" && (
-              <Link
-                href="/dashboard"
-                onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-ink-soft"
-              >
-                Dashboard
-              </Link>
-            )}
-            {user?.role === "admin" && (
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-ink-soft"
-              >
-                Admin
-              </Link>
-            )}
             <div className="my-2 h-px bg-surface-3" />
             <Link
               href="/cart"

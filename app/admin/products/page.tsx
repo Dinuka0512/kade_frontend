@@ -1,35 +1,40 @@
-import type { Metadata } from "next";
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { DeleteProductButton } from "@/components/delete-product-button";
 import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
 import { formatPrice } from "@/lib/format";
+import type { Product } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Products",
-};
-
-export default async function AdminProductsPage() {
-  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
-  let serverError = false;
-
-  try {
-    products = await api.getCatalog();
-  } catch {
-    serverError = true;
-  }
+export default function AdminProductsPage() {
+  const { data: products, error, loading, reload } = useAuthedResource<Product[]>(
+    () => api.getCatalog(),
+    []
+  );
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-ink">Products</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        {products.length} listings across all vendors
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Products</h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            {loading
+              ? "Loading listings…"
+              : `${products.length} listings across all vendors`}
+          </p>
+        </div>
+        <Link
+          href="/admin/products/new"
+          className="rounded-xl bg-black-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black-950/90"
+        >
+          + New product
+        </Link>
+      </div>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="divide-y divide-line-soft">
@@ -62,11 +67,17 @@ export default async function AdminProductsPage() {
                 {formatPrice(product.price)}
               </span>
               <div className="flex shrink-0 items-center gap-1">
-                <DeleteProductButton productId={product.id} />
+                <Link
+                  href={`/admin/products/${product.id}/edit`}
+                  className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition hover:bg-surface-2"
+                >
+                  Edit
+                </Link>
+                <DeleteProductButton productId={product.id} onChanged={reload} />
               </div>
             </div>
           ))}
-          {products.length === 0 && !serverError && (
+          {products.length === 0 && !loading && !error && (
             <p className="py-8 text-center text-sm text-ink-muted">No products yet</p>
           )}
         </div>

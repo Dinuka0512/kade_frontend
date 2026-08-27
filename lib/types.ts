@@ -50,8 +50,15 @@ export type ProductInput = {
   longDescription: string;
   categoryId: string;
   stock: number;
-  images: string[];
+  images?: string[];
   tags: string[];
+};
+
+export type VendorInput = {
+  name: string;
+  tagline?: string;
+  description?: string;
+  location?: string;
 };
 
 export type CartItem = {

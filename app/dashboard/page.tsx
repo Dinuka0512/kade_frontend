@@ -1,23 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
 import { formatCompact, formatDateTime, formatPrice } from "@/lib/format";
+import type { DashboardStats, Order } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+const EMPTY_STATS: DashboardStats = {
+  revenue: 0,
+  orders: 0,
+  pendingOrders: 0,
+  products: 0,
+  customers: 0,
+  avgOrderValue: 0,
+};
 
-export default async function DashboardOverviewPage() {
-  let stats: Awaited<ReturnType<typeof api.getDashboardStats>> = { revenue: 0, orders: 0, pendingOrders: 0, products: 0, customers: 0, avgOrderValue: 0 };
-  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
-  let serverError = false;
+export default function DashboardOverviewPage() {
+  const { data, error, loading } = useAuthedResource<
+    [DashboardStats, Order[]]
+  >(
+    () => Promise.all([api.getDashboardStats(), api.getOrders()]),
+    [EMPTY_STATS, []]
+  );
 
-  try {
-    [stats, orders] = await Promise.all([api.getDashboardStats(), api.getOrders()]);
-  } catch {
-    serverError = true;
-  }
-
+  const [stats, orders] = data;
   const recent = orders.slice(0, 5);
 
   return (
@@ -39,30 +48,38 @@ export default async function DashboardOverviewPage() {
         </Link>
       </div>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Revenue"
-          value={formatPrice(stats.revenue)}
-          hint="All time"
-        />
-        <StatCard
-          label="Orders"
-          value={String(stats.orders)}
-          hint={`${stats.pendingOrders} pending`}
-        />
-        <StatCard
-          label="Products"
-          value={String(stats.products)}
-          hint="Live listings"
-        />
-        <StatCard
-          label="Customers"
-          value={formatCompact(stats.customers)}
-          hint={`Avg order ${formatPrice(stats.avgOrderValue)}`}
-        />
-      </div>
+      {loading ? (
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-surface-3" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard
+            label="Revenue"
+            value={formatPrice(stats.revenue)}
+            hint="Your storefront"
+          />
+          <StatCard
+            label="Orders"
+            value={String(stats.orders)}
+            hint={`${stats.pendingOrders} pending`}
+          />
+          <StatCard
+            label="Products"
+            value={String(stats.products)}
+            hint="Live listings"
+          />
+          <StatCard
+            label="Customers"
+            value={formatCompact(stats.customers)}
+            hint={`Avg order ${formatPrice(stats.avgOrderValue)}`}
+          />
+        </div>
+      )}
 
       <section className="mt-8 rounded-2xl border border-line bg-surface p-6">
         <div className="flex items-center justify-between">

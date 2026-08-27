@@ -1,30 +1,38 @@
+"use client";
+
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
 import { formatDateTime, formatPrice } from "@/lib/format";
+import type { DashboardStats, Order, Product, Vendor } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+const EMPTY_STATS: DashboardStats = {
+  revenue: 0,
+  orders: 0,
+  pendingOrders: 0,
+  products: 0,
+  customers: 0,
+  avgOrderValue: 0,
+};
 
-export default async function AdminOverviewPage() {
-  let stats: Awaited<ReturnType<typeof api.getDashboardStats>> = { revenue: 0, orders: 0, pendingOrders: 0, products: 0, customers: 0, avgOrderValue: 0 };
-  let orders: Awaited<ReturnType<typeof api.getOrders>> = [];
-  let vendors: Awaited<ReturnType<typeof api.getVendors>> = [];
-  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
-  let serverError = false;
+export default function AdminOverviewPage() {
+  const { data, error, loading } = useAuthedResource<
+    [DashboardStats, Order[], Vendor[], Product[]]
+  >(
+    () =>
+      Promise.all([
+        api.getDashboardStats(),
+        api.getOrders(),
+        api.getVendors(),
+        api.getCatalog(),
+      ]),
+    [EMPTY_STATS, [], [], []]
+  );
 
-  try {
-    [stats, orders, vendors, products] = await Promise.all([
-      api.getDashboardStats(),
-      api.getOrders(),
-      api.getVendors(),
-      api.getCatalog(),
-    ]);
-  } catch {
-    serverError = true;
-  }
-
+  const [stats, orders, vendors, products] = data;
   const recent = orders.slice(0, 6);
 
   return (
@@ -36,30 +44,38 @@ export default async function AdminOverviewPage() {
         A snapshot of the whole Kade marketplace.
       </p>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Gross revenue"
-          value={formatPrice(stats.revenue)}
-          hint="All time"
-        />
-        <StatCard
-          label="Orders"
-          value={String(stats.orders)}
-          hint={`${stats.pendingOrders} pending`}
-        />
-        <StatCard
-          label="Products"
-          value={String(products.length)}
-          hint="Live listings"
-        />
-        <StatCard
-          label="Vendors"
-          value={String(vendors.length)}
-          hint={`${vendors.filter((v) => v.status === "active").length} active`}
-        />
-      </div>
+      {loading ? (
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-surface-3" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard
+            label="Gross revenue"
+            value={formatPrice(stats.revenue)}
+            hint="All time"
+          />
+          <StatCard
+            label="Orders"
+            value={String(stats.orders)}
+            hint={`${stats.pendingOrders} pending`}
+          />
+          <StatCard
+            label="Products"
+            value={String(products.length)}
+            hint="Live listings"
+          />
+          <StatCard
+            label="Vendors"
+            value={String(vendors.length)}
+            hint={`${vendors.filter((v) => v.status === "active").length} active`}
+          />
+        </div>
+      )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-line bg-surface p-6">

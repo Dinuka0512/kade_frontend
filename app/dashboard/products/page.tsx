@@ -1,27 +1,31 @@
-import type { Metadata } from "next";
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { DeleteProductButton } from "@/components/delete-product-button";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
 import { discountPercent, formatPrice } from "@/lib/format";
+import type { Product, Vendor } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function DashboardProductsPage() {
+  const { data, error, loading, reload } = useAuthedResource<
+    [Vendor | null, Product[]]
+  >(
+    () =>
+      Promise.all([
+        api.getMyVendor().catch(() => null),
+        api.getCatalog(),
+      ]),
+    [null, []]
+  );
 
-export const metadata: Metadata = {
-  title: "Products",
-};
-
-export default async function DashboardProductsPage() {
-  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
-  let serverError = false;
-
-  try {
-    products = await api.getCatalog();
-  } catch {
-    serverError = true;
-  }
+  const [vendor, products] = data;
+  const myProducts = vendor
+    ? products.filter((p) => p.vendorId === vendor.id)
+    : [];
 
   return (
     <div>
@@ -31,7 +35,9 @@ export default async function DashboardProductsPage() {
             Products
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {products.length} live listing{products.length === 1 ? "" : "s"}
+            {loading
+              ? "Loading your listings…"
+              : `${myProducts.length} live listing${myProducts.length === 1 ? "" : "s"}${vendor ? ` on ${vendor.name}` : ""}`}
           </p>
         </div>
         <Link
@@ -42,9 +48,9 @@ export default async function DashboardProductsPage() {
         </Link>
       </div>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
-      {products.length === 0 && !serverError ? (
+      {!loading && myProducts.length === 0 && !error ? (
         <div className="mt-6">
           <EmptyState
             title="No products yet"
@@ -62,7 +68,7 @@ export default async function DashboardProductsPage() {
       ) : (
         <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
           <div className="divide-y divide-line-soft">
-            {products.map((product) => {
+            {myProducts.map((product) => {
               const off = discountPercent(product.price, product.compareAtPrice);
               return (
                 <div
@@ -109,7 +115,7 @@ export default async function DashboardProductsPage() {
                     >
                       Edit
                     </Link>
-                    <DeleteProductButton productId={product.id} />
+                    <DeleteProductButton productId={product.id} onChanged={reload} />
                   </div>
                 </div>
               );

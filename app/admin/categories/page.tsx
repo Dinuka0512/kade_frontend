@@ -1,26 +1,19 @@
-import type { Metadata } from "next";
+"use client";
+
 import { ErrorBanner } from "@/components/error-banner";
 import { api } from "@/lib/api";
+import { useAuthedResource } from "@/lib/use-authed-resource";
+import type { Category, Product } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function AdminCategoriesPage() {
+  const { data, error, loading } = useAuthedResource<
+    [Category[], Product[]]
+  >(
+    () => Promise.all([api.getCategories(), api.getCatalog()]),
+    [[], []]
+  );
 
-export const metadata: Metadata = {
-  title: "Categories",
-};
-
-export default async function AdminCategoriesPage() {
-  let categories: Awaited<ReturnType<typeof api.getCategories>> = [];
-  let products: Awaited<ReturnType<typeof api.getCatalog>> = [];
-  let serverError = false;
-
-  try {
-    [categories, products] = await Promise.all([
-      api.getCategories(),
-      api.getCatalog(),
-    ]);
-  } catch {
-    serverError = true;
-  }
+  const [categories, products] = data;
 
   const counts = products.reduce<Record<string, number>>((acc, p) => {
     acc[p.categoryId] = (acc[p.categoryId] ?? 0) + 1;
@@ -38,10 +31,12 @@ export default async function AdminCategoriesPage() {
         Categories
       </h1>
       <p className="mt-1 text-sm text-ink-soft">
-        {categories.length} categories powering the catalog
+        {loading
+          ? "Loading categories…"
+          : `${categories.length} categories powering the catalog`}
       </p>
 
-      {serverError && <ErrorBanner />}
+      {error && <ErrorBanner />}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="overflow-x-auto">

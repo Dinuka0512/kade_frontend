@@ -4,9 +4,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import type { User } from "@/lib/types";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400";
+
+const homeByRole: Record<User["role"], string> = {
+  customer: "/",
+  vendor: "/dashboard",
+  admin: "/admin",
+};
 
 function LoginForm() {
   const router = useRouter();
@@ -25,7 +32,7 @@ function LoginForm() {
     setError(null);
     try {
       const user = await login(email, password);
-      router.push(user.role === "vendor" && next === "/" ? "/dashboard" : next);
+      router.push(next !== "/" ? next : homeByRole[user.role]);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
