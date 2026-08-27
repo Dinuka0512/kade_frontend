@@ -1,2 +1,7 @@
-onlyBuiltDependencies:
-  - unrs-resolver
+allowBuilds:
+  unrs-resolver: true
+
+fetchRetries: 5
+fetchRetryMintimeout: 20000
+fetchRetryMaxtimeout: 180000
+fetchTimeout: 300000

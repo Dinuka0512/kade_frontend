@@ -1,9 +1,45 @@
+# .dockerignore
+
+# Dependencies
 node_modules
+.pnpm-store
+
+# Build outputs
 .next
-.git
-.gitignore
-Dockerfile
+out
+dist
+build
+
+# Environment files
 .env
-.env.*
+.env.local
+.env.*.local
+
+# Logs
+*.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.tgz
+*.tar.gz
+.Dockerfile
+docker-compose*.yml
