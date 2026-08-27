@@ -10,7 +10,7 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_USE_MOCK=$_NEXT_PUBLIC_USE_MOCK'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/kade-frontend:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/kade-frontend:$BUILD_ID'
       - '-t'
       - 'gcr.io/$PROJECT_ID/kade-frontend:latest'
       - '.'
@@ -18,7 +18,7 @@ steps:
 
   # 2. Push the image to Artifact Registry / Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/kade-frontend:$SHORT_SHA']
+    args: ['push', 'gcr.io/$PROJECT_ID/kade-frontend:$BUILD_ID']
     timeout: '1800s'
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -33,7 +33,7 @@ steps:
       - 'deploy'
       - 'kade-frontend'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/kade-frontend:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/kade-frontend:$BUILD_ID'
       - '--region'
       - '$_REGION'
       - '--platform'
@@ -51,11 +51,11 @@ options:
 
 substitutions:
   _REGION: 'asia-south1'
-  _API_BASE_URL: 'http://8.234.69.195:8000/api'
+  _API_BASE_URL: 'http://8.234.94.139:8000/api'
   _NEXT_PUBLIC_USE_MOCK: 'false'
 
 images:
-  - 'gcr.io/$PROJECT_ID/kade-frontend:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/kade-frontend:$BUILD_ID'
   - 'gcr.io/$PROJECT_ID/kade-frontend:latest'
 
 timeout: '1800s'
