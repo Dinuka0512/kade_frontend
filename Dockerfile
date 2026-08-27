@@ -50,12 +50,14 @@ FROM base AS runner
 WORKDIR /app
 
 ARG API_PROXY_TARGET=http://localhost:8000/api
+ARG API_BASE_URL=http://localhost:8000/api
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
 ENV API_PROXY_TARGET=$API_PROXY_TARGET
+ENV API_BASE_URL=$API_BASE_URL
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next

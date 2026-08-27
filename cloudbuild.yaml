@@ -10,7 +10,9 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_USE_MOCK=$_NEXT_PUBLIC_USE_MOCK'
       - '--build-arg'
-      - 'API_PROXY_TARGET=$_PROXY_TARGET'
+      - 'API_PROXY_TARGET=$_API_BASE_URL'
+      - '--build-arg'
+      - 'API_BASE_URL=$_API_BASE_URL'
       - '-t'
       - 'gcr.io/$PROJECT_ID/kade-frontend:$BUILD_ID'
       - '-t'
@@ -46,7 +48,7 @@ steps:
       - '--memory'
       - '512Mi'
       - '--set-env-vars'
-      - 'API_PROXY_TARGET=$_PROXY_TARGET'
+      - 'API_PROXY_TARGET=$_API_BASE_URL,API_BASE_URL=$_API_BASE_URL'
     timeout: '1200s'
 
 options:
@@ -55,7 +57,7 @@ options:
 
 substitutions:
   _REGION: 'asia-south1'
-  _PROXY_TARGET: 'http://8.234.94.139:8000/api'
+  _API_BASE_URL: 'http://8.234.94.139:8000/api'
   _NEXT_PUBLIC_API_BASE_URL: '/api'
   _NEXT_PUBLIC_USE_MOCK: 'false'
 
