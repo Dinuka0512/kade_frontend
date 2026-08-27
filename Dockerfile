@@ -3,25 +3,31 @@ FROM node:22-alpine AS base
 RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 
 FROM base AS deps
+
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+
+RUN pnpm install --frozen-lockfile --allow-build=unrs-resolver
 
 FROM base AS builder
+
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
+
 COPY . .
 
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_USE_MOCK=false
+
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_USE_MOCK=$NEXT_PUBLIC_USE_MOCK
 
 RUN pnpm build
 
 FROM base AS runner
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -29,6 +35,7 @@ ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
 
 COPY --from=builder /app/public ./public
+
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
