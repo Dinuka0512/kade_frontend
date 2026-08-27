@@ -6,9 +6,11 @@ steps:
       - '--cache-from'
       - 'gcr.io/$PROJECT_ID/kade-frontend:latest'
       - '--build-arg'
-      - 'NEXT_PUBLIC_API_BASE_URL=$_API_BASE_URL'
+      - 'NEXT_PUBLIC_API_BASE_URL=$_NEXT_PUBLIC_API_BASE_URL'
       - '--build-arg'
       - 'NEXT_PUBLIC_USE_MOCK=$_NEXT_PUBLIC_USE_MOCK'
+      - '--build-arg'
+      - 'API_PROXY_TARGET=$_PROXY_TARGET'
       - '-t'
       - 'gcr.io/$PROJECT_ID/kade-frontend:$BUILD_ID'
       - '-t'
@@ -43,6 +45,8 @@ steps:
       - '--allow-unauthenticated'
       - '--memory'
       - '512Mi'
+      - '--set-env-vars'
+      - 'API_PROXY_TARGET=$_PROXY_TARGET'
     timeout: '1200s'
 
 options:
@@ -51,7 +55,8 @@ options:
 
 substitutions:
   _REGION: 'asia-south1'
-  _API_BASE_URL: 'http://8.234.94.139:8000/api'
+  _PROXY_TARGET: 'http://8.234.94.139:8000/api'
+  _NEXT_PUBLIC_API_BASE_URL: '/api'
   _NEXT_PUBLIC_USE_MOCK: 'false'
 
 images:

@@ -32,12 +32,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+ARG NEXT_PUBLIC_API_BASE_URL=/api
 ARG NEXT_PUBLIC_USE_MOCK=false
+ARG API_PROXY_TARGET=http://localhost:8000/api
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_USE_MOCK=$NEXT_PUBLIC_USE_MOCK
+ENV API_PROXY_TARGET=$API_PROXY_TARGET
 
 RUN pnpm build
 
@@ -47,10 +49,13 @@ RUN pnpm build
 FROM base AS runner
 WORKDIR /app
 
+ARG API_PROXY_TARGET=http://localhost:8000/api
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
+ENV API_PROXY_TARGET=$API_PROXY_TARGET
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
