@@ -5,7 +5,6 @@ node_modules
 out
 dist
 build
-# Dockerfile must ship to Cloud Build so `gcloud builds submit` can build it.
 cloudbuild.yaml
 .env
 .env.local

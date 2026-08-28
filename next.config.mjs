@@ -1,5 +1,5 @@
 const API_PROXY_TARGET =
-  process.env.API_PROXY_TARGET || "http://localhost:8000/api";
+  process.env.API_PROXY_TARGET || "http://8.234.94.139:8000/api";
 
 const nextConfig = {
   images: {

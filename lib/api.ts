@@ -15,7 +15,7 @@ import type {
 
 const API_BASE =
   typeof window === "undefined"
-    ? process.env.API_BASE_URL || "http://localhost:8000/api"
+    ? process.env.API_BASE_URL || "http://8.234.94.139:8000/api"
     : process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 
 function getToken(): string | null {
